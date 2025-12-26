@@ -1,6 +1,6 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "3d-viewer",
+	"name": "3D Viewer",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",

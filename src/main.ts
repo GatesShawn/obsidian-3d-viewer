@@ -1,5 +1,6 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { main } from 'webgl';
 
 // Remember to rename these classes and interfaces!
 
@@ -90,6 +91,7 @@ class SampleModal extends Modal {
 	onOpen() {
 		let {contentEl} = this;
 		contentEl.setText('Woah!');
+		main();
 	}
 
 	onClose() {
