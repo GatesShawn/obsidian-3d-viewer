@@ -2,8 +2,60 @@ import { glMatrix } from "gl-matrix";
 import { initBuffers } from "init-buffer";
 import { drawScene } from "draw";
 
-// Exported entry point. Accepts a DOM canvas element to render into.
-export function main(canvas: HTMLCanvasElement) {
+// Exported entry point. Accepts a DOM canvas element and optional geometry data to render.
+// If no geometry provided, renders a default cube.
+export function main(canvas: HTMLCanvasElement, vertices?: number[], indices?: number[]) {
+    // Default cube geometry
+    const defaultVertices = [
+        // Front face
+        -1.0, -1.0,  1.0,
+         1.0, -1.0,  1.0,
+         1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        
+        // Back face
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0, -1.0,
+         1.0,  1.0, -1.0,
+         1.0, -1.0, -1.0,
+        
+        // Top face
+        -1.0,  1.0, -1.0,
+        -1.0,  1.0,  1.0,
+         1.0,  1.0,  1.0,
+         1.0,  1.0, -1.0,
+        
+        // Bottom face
+        -1.0, -1.0, -1.0,
+         1.0, -1.0, -1.0,
+         1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+        
+        // Right face
+         1.0, -1.0, -1.0,
+         1.0,  1.0, -1.0,
+         1.0,  1.0,  1.0,
+         1.0, -1.0,  1.0,
+        
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0,
+    ];
+
+    const defaultIndices = [
+        0,  1,  2,      0,  2,  3,    // front
+        4,  5,  6,      4,  6,  7,    // back
+        8,  9, 10,     8, 10, 11,   // top
+        12, 13, 14,     12, 14, 15,   // bottom
+        16, 17, 18,     16, 18, 19,   // right
+        20, 21, 22,     20, 22, 23,   // left
+    ];
+
+    // Use provided geometry or defaults
+    const verts = vertices || defaultVertices;
+    const inds = indices || defaultIndices;
     // Use the provided canvas
     if (!canvas) {
         console.warn("No canvas provided for WebGL");
@@ -49,7 +101,7 @@ if (shaderProgram === null) {
 
 // Here's where we call the routine that builds all the
 // objects we'll be drawing.
-const buffers = initBuffers(gl);
+const buffers = initBuffers(gl, verts, inds);
 
 // Draw the scene
 // note: this draws once; if you need animation you would re-call from a requestAnimationFrame loop

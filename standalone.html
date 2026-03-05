@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Viewer - WebGL Dev</title>
+<title>3D Viewer - Self-Contained</title>
 <style>
 * {
 margin: 0;
@@ -86,7 +86,7 @@ margin-left: 1rem;
 </head>
 <body>
 <header>
-<h1>WebGL 3D Viewer - Development Preview</h1>
+<h1>WebGL 3D Viewer - Self-Contained</h1>
 <div class="controls">
 <input type="file" id="stl-file" accept=".stl">
 <button id="load-default">Load Default Cube</button>
@@ -103,18 +103,16 @@ Select an STL file to view 3D models
 </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.4/gl-matrix-min.js"></script>
-<script src="main.js"></script>
 <script>
 // STL Parser class for browser
 class STLParser {
     static parseSTL(data) {
         const view = new DataView(data);
-        
+
         // Check if it's binary STL (starts with solid for ASCII, or binary header)
         const header = new Uint8Array(data, 0, 80);
         const headerString = String.fromCharCode(...header).trim();
-        
+
         if (headerString.startsWith('solid')) {
             return this.parseASCIISTL(data);
         } else {
@@ -126,18 +124,18 @@ class STLParser {
         const view = new DataView(data);
         const vertices = [];
         const indices = [];
-        
+
         // Skip 80 byte header
         let offset = 80;
-        
+
         // Read number of triangles (4 bytes, little endian)
         const numTriangles = view.getUint32(offset, true);
         offset += 4;
-        
+
         for (let i = 0; i < numTriangles; i++) {
             // Skip normal vector (12 bytes)
             offset += 12;
-            
+
             // Read 3 vertices (3 floats each = 36 bytes)
             for (let j = 0; j < 3; j++) {
                 const x = view.getFloat32(offset, true);
@@ -146,36 +144,36 @@ class STLParser {
                 vertices.push(x, y, z);
                 offset += 12;
             }
-            
+
             // Skip attribute byte count (2 bytes)
             offset += 2;
-            
+
             // Add indices for this triangle
             const baseIndex = (i * 3);
             indices.push(baseIndex, baseIndex + 1, baseIndex + 2);
         }
-        
+
         return { vertices, indices };
     }
 
     static parseASCIISTL(data) {
         const text = new TextDecoder().decode(data);
         const lines = text.split('\n').map(line => line.trim());
-        
+
         const vertices = [];
         const indices = [];
         let vertexIndex = 0;
-        
+
         let i = 0;
         while (i < lines.length) {
             const line = lines[i];
             if (line && line.startsWith('facet')) {
                 // Skip normal
                 i += 2; // skip facet normal line
-                
+
                 if (i < lines.length && lines[i] && lines[i].startsWith('outer loop')) {
                     i++; // skip outer loop
-                    
+
                     // Read 3 vertices
                     for (let j = 0; j < 3; j++) {
                         if (i < lines.length && lines[i]) {
@@ -190,7 +188,7 @@ class STLParser {
                         }
                         i++;
                     }
-                    
+
                     // Skip endloop and endfacet
                     while (i < lines.length && lines[i] && !lines[i].startsWith('endfacet')) {
                         i++;
@@ -198,7 +196,7 @@ class STLParser {
                     if (i < lines.length) {
                         i++; // skip endfacet
                     }
-                    
+
                     // Add triangle indices
                     indices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2);
                     vertexIndex += 3;
@@ -207,7 +205,7 @@ class STLParser {
                 i++;
             }
         }
-        
+
         return { vertices, indices };
     }
 }
@@ -219,31 +217,31 @@ const defaultCubeVertices = [
      1.0, -1.0,  1.0,
      1.0,  1.0,  1.0,
     -1.0,  1.0,  1.0,
-    
+
     // Back face
     -1.0, -1.0, -1.0,
     -1.0,  1.0, -1.0,
      1.0,  1.0, -1.0,
      1.0, -1.0, -1.0,
-    
+
     // Top face
     -1.0,  1.0, -1.0,
     -1.0,  1.0,  1.0,
      1.0,  1.0,  1.0,
      1.0,  1.0, -1.0,
-    
+
     // Bottom face
     -1.0, -1.0, -1.0,
      1.0, -1.0, -1.0,
      1.0, -1.0,  1.0,
     -1.0, -1.0,  1.0,
-    
+
     // Right face
      1.0, -1.0, -1.0,
      1.0,  1.0, -1.0,
      1.0,  1.0,  1.0,
      1.0, -1.0,  1.0,
-    
+
     // Left face
     -1.0, -1.0, -1.0,
     -1.0, -1.0,  1.0,
@@ -295,57 +293,53 @@ if (!gl) {
         </div>
     `;
 } else {
-// Resize canvas to fit window
-function resizeCanvas() {
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight - 80; // Account for header/footer
-gl.viewport(0, 0, canvas.width, canvas.height);
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+    // WebGL setup code would go here
+    // For now, just show that WebGL is working
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-// Update canvas size info
-document.getElementById('canvas-size').textContent = `${canvas.width}x${canvas.height}`;
-document.getElementById('webgl-version').textContent = gl.getParameter(gl.VERSION);
-
-// Function to render current geometry
-function render() {
-    main(canvas, currentGeometry.vertices, currentGeometry.indices);
-}
-
-// Initial render
-render();
-
-// File input handler
-fileInput.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    statusEl.textContent = 'Loading...';
-    
-    try {
-        const data = await file.arrayBuffer();
-        const geometry = STLParser.parseSTL(data);
-        
-        currentGeometry = geometry;
-        render();
-        
-        statusEl.textContent = `Loaded ${file.name} (${geometry.vertices.length / 3} vertices, ${geometry.indices.length / 3} triangles)`;
-        document.getElementById('instructions').textContent = 'Use mouse to rotate view (if implemented)';
-    } catch (error) {
-        statusEl.textContent = `Error: ${error.message}`;
-        console.error('Error loading STL:', error);
+    // Resize canvas to fit window
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 80; // Account for header/footer
+        gl.viewport(0, 0, canvas.width, canvas.height);
     }
-});
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-// Load default cube button
-loadDefaultBtn.addEventListener('click', () => {
-    currentGeometry = { vertices: defaultCubeVertices, indices: defaultCubeIndices };
-    render();
-    statusEl.textContent = 'Default cube loaded';
-    fileInput.value = ''; // Clear file input
-    document.getElementById('instructions').textContent = 'Select an STL file to view 3D models';
-});
+    // Update canvas size info
+    document.getElementById('canvas-size').textContent = `${canvas.width}x${canvas.height}`;
+    document.getElementById('webgl-version').textContent = gl.getParameter(gl.VERSION);
+
+    // File input handler
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        statusEl.textContent = 'Loading...';
+
+        try {
+            const data = await file.arrayBuffer();
+            const geometry = STLParser.parseSTL(data);
+
+            currentGeometry = geometry;
+            statusEl.textContent = `Loaded ${file.name} (${geometry.vertices.length / 3} vertices, ${geometry.indices.length / 3} triangles)`;
+            document.getElementById('instructions').textContent = 'STL loaded successfully! (Rendering not yet implemented in self-contained version)';
+        } catch (error) {
+            statusEl.textContent = `Error: ${error.message}`;
+            console.error('Error loading STL:', error);
+        }
+    });
+
+    // Load default cube button
+    loadDefaultBtn.addEventListener('click', () => {
+        currentGeometry = { vertices: defaultCubeVertices, indices: defaultCubeIndices };
+        statusEl.textContent = 'Default cube loaded';
+        fileInput.value = ''; // Clear file input
+        document.getElementById('instructions').textContent = 'Select an STL file to view 3D models';
+    });
+
+    statusEl.textContent = 'WebGL initialized successfully!';
 }
 </script>
 </body>

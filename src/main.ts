@@ -1,6 +1,7 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
+import {App, Editor, MarkdownView, Modal, Notice, Plugin, FuzzySuggestModal, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
-import { main } from 'webgl';
+import { main } from './webgl';
+import { STLHandler } from './STLHandler';
 
 // Remember to rename these classes and interfaces!
 
@@ -11,9 +12,9 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
+		this.addRibbonIcon('box', 'Load STL', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			new STLFilePickerModal(this.app).open();
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -26,6 +27,15 @@ export default class MyPlugin extends Plugin {
 			name: 'Open modal (simple)',
 			callback: () => {
 				new SampleModal(this.app).open();
+			}
+		});
+
+		// Command to load STL files
+		this.addCommand({
+			id: 'load-stl-file',
+			name: 'Load STL File',
+			callback: () => {
+				new STLFilePickerModal(this.app).open();
 			}
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
@@ -91,7 +101,67 @@ class SampleModal extends Modal {
 	onOpen() {
 		let {contentEl} = this;
 		contentEl.setText('Woah!');
-		main();
+		// main(); // Commented out to fix build error
+	}
+
+	onClose() {
+		const {contentEl} = this;
+		contentEl.empty();
+	}
+}
+
+class STLFilePickerModal extends FuzzySuggestModal<TFile> {
+	constructor(app: App) {
+		super(app);
+		this.setPlaceholder("Select an STL file...");
+	}
+
+	getItems(): TFile[] {
+		return this.app.vault.getFiles().filter(file => file.extension === 'stl');
+	}
+
+	getItemText(file: TFile): string {
+		return file.path;
+	}
+
+	onChooseItem(file: TFile, evt: MouseEvent | KeyboardEvent) {
+		new STLViewerModal(this.app, file).open();
+	}
+}
+
+class STLViewerModal extends Modal {
+	private canvas: HTMLCanvasElement;
+	private file: TFile;
+
+	constructor(app: App, file: TFile) {
+		super(app);
+		this.file = file;
+	}
+
+	async onOpen() {
+		const {contentEl} = this;
+		contentEl.empty();
+
+		contentEl.createEl('h2', {text: `Viewing: ${this.file.name}`});
+
+		this.canvas = contentEl.createEl('canvas', {
+			attr: {
+				width: '800',
+				height: '600',
+				style: 'border: 1px solid #ccc; display: block; margin: 10px auto;'
+			}
+		});
+
+		try {
+			const data = await this.app.vault.adapter.readBinary(this.file.path);
+			const geometry = STLHandler.parseSTL(data);
+			
+			// Render the 3D model
+			main(this.canvas, geometry.vertices, geometry.indices);
+			
+		} catch (error) {
+			contentEl.createEl('p', {text: `Error loading STL file: ${(error as Error).message}`});
+		}
 	}
 
 	onClose() {
