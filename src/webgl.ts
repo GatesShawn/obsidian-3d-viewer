@@ -73,8 +73,11 @@ export function main(canvas: HTMLCanvasElement, vertices?: number[], indices?: n
     
     // Set clear color to black, fully opaque
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    // Enable depth testing
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
     // Clear the color buffer with specified clear color
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Set viewport
     gl.viewport(0, 0, canvas.width, canvas.height);

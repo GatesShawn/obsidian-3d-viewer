@@ -5,6 +5,7 @@ function initBuffers(gl: WebGLRenderingContext, vertices: number[], indices: num
     return {
         position: positionBuffer,
         indices: indexBuffer,
+        indexCount: indices.length,
     };
 }
 

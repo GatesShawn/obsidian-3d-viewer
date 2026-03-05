@@ -14,6 +14,7 @@ interface ProgramInfo {
 interface Buffers {
   position: WebGLBuffer | null;
   indices: WebGLBuffer | null;
+  indexCount: number;
 }
 
 function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers) {
@@ -60,7 +61,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix as Float32List);
 
    {
-    const vertexCount = 36;
+    const vertexCount = buffers.indexCount;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);

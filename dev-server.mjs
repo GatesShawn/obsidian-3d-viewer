@@ -21,6 +21,7 @@ const server = http.createServer((req, res) => {
 		".png": "image/png",
 		".jpg": "image/jpg",
 		".gif": "image/gif",
+		".ico": "image/x-icon",
 	};
 
 	const contentType = mimeTypes[extname] || "application/octet-stream";
